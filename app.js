@@ -10,6 +10,7 @@ if (!records) {
 }
 
 const ZERO_TARGET_ABSENCE = ["feiertag","dienstbefreiung","freistellung v. dst", "erlaubte abwesenheit"];
+const NORMAL_WORK_WORDS = ["grundbetrieb"];
 const COMP_WORD = "ausgleich mehrarbeit";
 const VACATION_WORD = "erholungsurlaub";
 
@@ -96,8 +97,15 @@ function calculateDay(day){
   // If there are multiple blocks, each block's own evening break is counted.
   // A regular break is only charged inside a continuous block.
   let worked=Math.max(0,raw-regularBreak-eveningBreak);
-  let effectiveTarget=target, balance=worked-target;
+  let effectiveTarget=target, balance=worked;
   let status="ok";
+  // Sondergrund mit Zeiten: Mo-Fr immer 9:00 Soll, Wochenende 0:00 Soll.
+  const hasSpecialTimedReason = blocks.length>0 && reasons.some(r=>{
+    const rr=normalizeReason(r);
+    return rr && !NORMAL_WORK_WORDS.some(w=>rr.includes(w)) && !rr.includes(VACATION_WORD) && !rr.includes("feiertag") && !rr.includes(COMP_WORD);
+  });
+  if(hasSpecialTimedReason) effectiveTarget = d.getDay()>=1 && d.getDay()<=5 ? 540 : 0;
+  balance=worked-effectiveTarget;
   if(hasVacation && blocks.length===0){worked=target; effectiveTarget=target; balance=0; status="urlaub";}
   else if(types.includes("comp") && blocks.length===0){
     // A compensatory day is free of duty, but it consumes the normal daily
@@ -140,18 +148,40 @@ function render(){
     <div class="summary-row"><span>Arbeitszeitkonto</span><strong class="${balance>=0?"pos":"neg"}">${balance>=0?"+":""}${fmtMin(balance)}</strong></div>
     <div class="summary-row"><span>Urlaubsanspruch inkl. Übertrag</span><strong>${settings.annualVacation+settings.carryVacation} Tage</strong></div>
     <div class="summary-row"><span>Resturlaub</span><strong>${vacationLeft} Tage</strong></div>`;
-  $("months").innerHTML=months.length?months.map(m=>{
-    const a=byMonth[m],w=a.reduce((x,r)=>x+r.worked,0),t=a.reduce((x,r)=>x+r.target,0),b=w-t,v=a.filter(r=>r.status==="urlaub").length;
-    return `<div class="months-row"><span>${monthLabel(m)}</span><span>${v} Urlaub</span><strong class="${b>=0?"pos":"neg"}">${b>=0?"+":""}${fmtMin(b)}</strong></div>`
-  }).join(""):`<div class="muted">Noch keine Monatsdaten.</div>`;
 
-  $("days").innerHTML=data.length?data.slice().reverse().map(r=>{
+  const renderDay=r=>{
     const d=dateObj(r.date);
     const blockText=r.blocks?.length ? r.blocks.map(b=>`${fmtTime(b.start)} – ${fmtTime(b.end)}${b.reason?` · ${b.reason}`:""}`).join("<br>") : (r.dayReason||"keine Buchung");
     const pause=(r.regularBreak+r.eveningBreak)?` · Pausen ${r.regularBreak+r.eveningBreak} min`:"";
     const badge=r.status==="urlaub"?" · Urlaub":r.status==="ausgleich"?" · Ausgleich Mehrarbeit":r.status==="feiertag/abwesenheit"?" · kein Soll":r.status==="prüfen"?" · ⚠ prüfen":"";
-    return `<div class="day"><div class="date"><b>${d.toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit"})}</b><small>${r.weekday}</small></div><div><div class="times">${blockText}</div><div class="reason">${pause}${badge}</div></div><div class="balance ${r.balance>0?"pos":r.balance<0?"neg":"zero"}">${r.balance>0?"+":""}${fmtMin(r.balance)}</div></div>`
-  }).join(""):`<div class="muted" style="padding:18px 0">Noch keine Daten. Importiere eine Excel-Datei.</div>`;
+    return `<div class="day"><div class="date"><b>${d.toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit"})}</b><small>${r.weekday}</small></div><div><div class="times">${blockText}</div><div class="reason">Soll ${fmtMin(r.target)}${pause}${badge}</div></div><div class="balance ${r.balance>0?"pos":r.balance<0?"neg":"zero"}">${r.balance>0?"+":""}${fmtMin(r.balance)}</div></div>`;
+  };
+  $("daysPreview").innerHTML=data.length?data.slice().reverse().slice(0,8).map(renderDay).join(""):`<div class="muted" style="padding:18px 0">Noch keine Daten. Importiere eine Excel-Datei.</div>`;
+
+  const selected=window.selectedMonth && byMonth[window.selectedMonth] ? window.selectedMonth : (months[months.length-1]||null);
+  window.selectedMonth=selected;
+  $("monthTabs").innerHTML=months.length?months.map(m=>`<button class="month-tab ${m===selected?"active":""}" data-month="${m}">${monthLabel(m)}</button>`).join(""):`<div class="months-empty">Noch keine Monatsdaten.</div>`;
+  document.querySelectorAll(".month-tab").forEach(b=>b.onclick=()=>{window.selectedMonth=b.dataset.month;renderMonth();});
+  renderMonth();
+}
+function renderMonth(){
+  const data=calculateAll(), m=window.selectedMonth;
+  if(!m){$("monthDetail").innerHTML=`<div class="months-empty">Importiere zuerst eine Excel-Datei.</div>`;return;}
+  const rows=data.filter(r=>monthKey(r.date)===m), w=rows.reduce((a,r)=>a+r.worked,0), t=rows.reduce((a,r)=>a+r.target,0), b=w-t, v=rows.filter(r=>r.status==="urlaub").length;
+  const renderDay=r=>{
+    const d=dateObj(r.date);
+    const blockText=r.blocks?.length?r.blocks.map(x=>`${fmtTime(x.start)} – ${fmtTime(x.end)}${x.reason?` · ${x.reason}`:""}`).join("<br>"):(r.dayReason||"keine Buchung");
+    const badge=r.status==="urlaub"?" · Urlaub":r.status==="ausgleich"?" · Ausgleich":r.status==="feiertag/abwesenheit"?" · kein Soll":r.status==="prüfen"?" · ⚠ prüfen":"";
+    return `<div class="day"><div class="date"><b>${d.toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit"})}</b><small>${r.weekday}</small></div><div><div class="times">${blockText}</div><div class="reason">Soll ${fmtMin(r.target)}${(r.regularBreak+r.eveningBreak)?` · Pausen ${r.regularBreak+r.eveningBreak} min`:""}${badge}</div></div><div class="balance ${r.balance>0?"pos":r.balance<0?"neg":"zero"}">${r.balance>0?"+":""}${fmtMin(r.balance)}</div></div>`;
+  };
+  $("monthDetail").innerHTML=`<div class="month-head"><div class="month-title">${monthLabel(m)}</div><div class="pill">${rows.length} Tage</div></div><div class="month-kpis"><div class="month-kpi"><span>Geleistet</span><strong>${fmtMin(w)}</strong></div><div class="month-kpi"><span>Soll</span><strong>${fmtMin(t)}</strong></div><div class="month-kpi"><span>Saldo</span><strong class="${b>=0?"pos":"neg"}">${b>=0?"+":""}${fmtMin(b)}</strong></div></div><div class="summary-row" style="margin-top:10px"><span>Urlaub</span><strong>${v} Tage</strong></div><div class="month-days">${rows.slice().reverse().map(renderDay).join("")}</div>`;
+}
+function showView(view){
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+  $("view-"+view).classList.add("active");
+  document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",t.dataset.view===view));
+  if(view==="months") renderMonth();
+  window.scrollTo({top:0,behavior:"smooth"});
 }
 
 function parseSheet(ws,fileName){
@@ -203,13 +233,14 @@ function exportCSV(){
     r.date,r.weekday,r.blocks.map(b=>`${fmtTime(b.start)}-${fmtTime(b.end)}`).join(" | "),r.reasons.join(" | "),r.raw,r.worked,r.target,r.balance,r.regularBreak,r.eveningBreak,r.status
   ].map(csvEscape).join(";"))];
   const blob=new Blob(["\ufeff"+lines.join("\n")],{type:"text/csv;charset=utf-8"}),url=URL.createObjectURL(blob),a=document.createElement("a");
-  a.href=url;a.download="arbeitszeitkonto-v2.csv";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+  a.href=url;a.download="arbeitszeitkonto-v3.csv";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 $("fileInput").addEventListener("change",e=>{if(e.target.files[0])importFile(e.target.files[0]);e.target.value=""});
 $("exportBtn").onclick=exportCSV;
-$("settingsBtn").onclick=()=>{$("settings").classList.toggle("hidden");$("weeklyHours").value=settings.weeklyHours;$("annualVacation").value=settings.annualVacation;$("carryVacation").value=settings.carryVacation;$("regularBreak").value=settings.regularBreak;$("eveningBreak").value=settings.eveningBreak;$("eveningFrom").value=settings.eveningFrom};
-$("closeSettings").onclick=()=>$("settings").classList.add("hidden");
-$("saveSettings").onclick=()=>{settings={weeklyHours:+$("weeklyHours").value,annualVacation:+$("annualVacation").value,carryVacation:+$("carryVacation").value,regularBreak:+$("regularBreak").value,eveningBreak:+$("eveningBreak").value,eveningFrom:$("eveningFrom").value||"16:30"};save();$("settings").classList.add("hidden");render()};
+document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>showView(t.dataset.view));
+function loadSettingsUI(){$("weeklyHours").value=settings.weeklyHours;$("annualVacation").value=settings.annualVacation;$("carryVacation").value=settings.carryVacation;$("regularBreak").value=settings.regularBreak;$("eveningBreak").value=settings.eveningBreak;$("eveningFrom").value=settings.eveningFrom;}
+$("saveSettings").onclick=()=>{settings={weeklyHours:+$("weeklyHours").value,annualVacation:+$("annualVacation").value,carryVacation:+$("carryVacation").value,regularBreak:+$("regularBreak").value,eveningBreak:+$("eveningBreak").value,eveningFrom:$("eveningFrom").value||"16:30"};save();render()};
 $("clearBtn").onclick=()=>{if(confirm("Alle lokal gespeicherten Arbeitszeitdaten und Einstellungen löschen?")){records=[];localStorage.removeItem("az-records-v2");localStorage.removeItem("az-records");render()}};
 if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
+loadSettingsUI();
 render();

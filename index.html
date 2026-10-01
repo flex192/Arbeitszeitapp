@@ -16,95 +16,53 @@
 <div id="app">
 <header class="topbar">
   <div><div class="eyebrow">PRIVAT • LOKAL</div><h1>Arbeitszeitkonto</h1></div>
-  <button id="settingsBtn" class="icon-btn" aria-label="Einstellungen">⚙️</button>
+  <div class="header-actions"><span id="fileStatus" class="pill">Bereit</span></div>
 </header>
 
 <main>
-<section class="hero card">
-  <div>
-    <div class="muted light">Aktuelles Arbeitszeitkonto</div>
-    <div id="totalBalance" class="hero-number">00:00 h</div>
-    <div id="periodLabel" class="muted light">Noch keine Daten</div>
-  </div>
-  <div class="hero-badge">⏱️</div>
+<section id="view-overview" class="view active">
+  <section class="hero card"><div><div class="muted light">Aktuelles Arbeitszeitkonto</div><div id="totalBalance" class="hero-number">00:00 h</div><div id="periodLabel" class="muted light">Noch keine Daten</div></div><div class="hero-badge">⏱️</div></section>
+  <section class="grid">
+    <div class="stat card"><span>Geleistet</span><strong id="worked">00:00 h</strong></div>
+    <div class="stat card"><span>Sollzeit</span><strong id="target">00:00 h</strong></div>
+    <div class="stat card"><span>Urlaub genutzt</span><strong id="vacationUsed">0 Tage</strong></div>
+    <div class="stat card"><span>Resturlaub</span><strong id="vacationLeft">30 Tage</strong></div>
+  </section>
+  <section class="card"><div class="section-head"><h2>Arbeitszeitkonto</h2><button id="exportBtn" class="small-btn">Export</button></div><div id="accountSummary" class="summary-list"></div></section>
+  <section class="card"><div class="section-head"><h2>Letzte Tage</h2><span id="rowCount" class="muted">0 Tage</span></div><div id="daysPreview" class="days"></div></section>
 </section>
 
-<section class="grid">
-  <div class="stat card"><span>Geleistet</span><strong id="worked">00:00 h</strong></div>
-  <div class="stat card"><span>Sollzeit</span><strong id="target">00:00 h</strong></div>
-  <div class="stat card"><span>Urlaub genutzt</span><strong id="vacationUsed">0 Tage</strong></div>
-  <div class="stat card"><span>Resturlaub</span><strong id="vacationLeft">30 Tage</strong></div>
+<section id="view-months" class="view">
+  <section class="card"><div class="section-head"><h2>Monate</h2><span id="monthCount" class="muted">0</span></div><div id="monthTabs" class="month-tabs"></div><div id="monthDetail"></div></section>
 </section>
 
-<section class="card">
-  <div class="section-head"><h2>Excel importieren</h2><span id="fileStatus" class="pill">Bereit</span></div>
-  <p class="muted">Neue Monate werden zum bestehenden Arbeitszeitkonto hinzugefügt. Bereits importierte Tage werden nicht doppelt angelegt.</p>
-  <label class="upload">
-    <input id="fileInput" type="file" accept=".xlsx,.xls,.csv">
-    <span>📥 Excel-Datei auswählen</span>
-  </label>
-  <div id="importMessage" class="message"></div><div id="reviewHint" class="message"></div>
+<section id="view-import" class="view">
+  <section class="card"><div class="section-head"><h2>Excel importieren</h2><span class="pill">Lokal</span></div><p class="muted">Neue Monate werden hinzugefügt. Bereits vorhandene Tage aus derselben Datei werden vollständig ersetzt, damit korrigierte Excel-Daten sauber übernommen werden.</p><label class="upload"><input id="fileInput" type="file" accept=".xlsx,.xls,.csv"><span>📥 Excel-Datei auswählen</span></label><div id="importMessage" class="message"></div><div id="reviewHint" class="message"></div></section>
+  <section class="card"><h2>Import-Regeln</h2><ul class="notes"><li>Fehlt in einer Folgezeile das Datum, gehört sie zum zuletzt genannten Datum.</li><li>Mehrere Zeiträume desselben Tages werden zusammengeführt.</li><li>Wochentage werden immer aus dem echten Datum berechnet.</li><li>Dienste über Mitternacht werden korrekt behandelt.</li></ul></section>
 </section>
 
-<section class="card">
-  <div class="section-head"><h2>Arbeitszeitkonto</h2><button id="exportBtn" class="small-btn">Export</button></div>
-  <div id="accountSummary" class="summary-list"></div>
-</section>
-
-<section class="card">
-  <div class="section-head"><h2>Monate</h2><span id="monthCount" class="muted">0</span></div>
-  <div id="months" class="months"></div>
-</section>
-
-<section class="card">
-  <div class="section-head"><h2>Tage</h2><span id="rowCount" class="muted">0 Tage</span></div>
-  <div id="days" class="days"></div>
-</section>
-
-<section id="settings" class="card settings hidden">
-  <div class="section-head"><h2>Einstellungen</h2><button id="closeSettings" class="small-btn">Schließen</button></div>
-  <label>Wochenarbeitszeit
-    <input id="weeklyHours" type="number" min="1" max="80" step="0.5">
-  </label>
-  <label>Jahresurlaub
-    <input id="annualVacation" type="number" min="0" max="100" step="0.5">
-  </label>
-  <label>Urlaub Vorjahr
-    <input id="carryVacation" type="number" min="0" max="100" step="0.5">
-  </label>
-  <label>Normale Pause Mo–Do (Minuten)
-    <input id="regularBreak" type="number" min="0" max="180" step="5">
-  </label>
-  <label>Abendpause bei Dienst über 16:30 (Minuten)
-    <input id="eveningBreak" type="number" min="0" max="120" step="5">
-  </label>
-  <label>Abendpause ab Uhrzeit
-    <input id="eveningFrom" type="time">
-  </label>
-  <button id="saveSettings" class="primary">Speichern</button>
-  <p class="muted small">Die Einstellungen werden nur auf diesem Gerät gespeichert.</p>
-</section>
-
-<section class="card">
-  <div class="section-head"><h2>Hinweise</h2></div>
-  <ul class="notes">
-    <li>Samstag und Sonntag haben keine Sollzeit.</li>
-    <li>Mo–Do: 07:00–16:30 minus 30 Minuten = 9:00 h Sollzeit.</li>
-    <li>Fr: 07:00–12:00 = 5:00 h Sollzeit.</li>
-    <li>Mehrere Zeiträume am selben Datum werden zusammengeführt; ein fehlendes Datum in einer Folgezeile gehört zum zuletzt genannten Datum.</li>
-    <li>Die Abendpause wird pro Zeitblock berücksichtigt, wenn dessen Ende nach 16:30 liegt.</li>
-    <li>Die normale 30-Minuten-Pause wird nur bei einem zusammenhängenden Mo–Do-Zeitblock ab 07:00 bis mindestens 16:00 abgezogen.</li>
-    <li>Urlaub an einem regulären Arbeitstag wird mit der jeweiligen Sollzeit gutgeschrieben.</li>
-    <li>„Ausgleich Mehrarbeit Grundbetrieb“ verbraucht das Tages-Soll aus dem Überstundenkonto; Feiertage haben kein Soll.</li>
-  </ul>
+<section id="view-settings" class="view">
+  <section class="card settings"><div class="section-head"><h2>Einstellungen</h2></div>
+    <label>Wochenarbeitszeit<input id="weeklyHours" type="number" min="1" max="80" step="0.5"></label>
+    <label>Jahresurlaub<input id="annualVacation" type="number" min="0" max="100" step="0.5"></label>
+    <label>Urlaub Vorjahr<input id="carryVacation" type="number" min="0" max="100" step="0.5"></label>
+    <label>Normale Pause Mo–Do (Minuten)<input id="regularBreak" type="number" min="0" max="180" step="5"></label>
+    <label>Abendpause bei Dienst über 16:30 (Minuten)<input id="eveningBreak" type="number" min="0" max="120" step="5"></label>
+    <label>Abendpause ab Uhrzeit<input id="eveningFrom" type="time"></label>
+    <button id="saveSettings" class="primary">Speichern</button>
+    <p class="muted small">Die Einstellungen werden nur auf diesem Gerät gespeichert.</p>
+  </section>
+  <section class="card"><h2>Berechnungsregeln</h2><ul class="notes"><li>Mo–Do: 9:00 h Sollzeit.</li><li>Freitag: 5:00 h Sollzeit.</li><li>Samstag/Sonntag: 0:00 h Sollzeit.</li><li>Sondergrund ohne Zeiten: ±0:00.</li><li>Sondergrund mit Zeiten: 9:00 h Soll an Montag–Freitag; am Wochenende 0:00 h Soll.</li><li>Urlaub an einem regulären Arbeitstag wird mit dem Tages-Soll gutgeschrieben.</li><li>Feiertage und sonstige reine Abwesenheiten ohne Zeiten: 0:00 h Soll und 0:00 h Saldo.</li></ul></section>
+  <section class="card"><button id="clearBtn" class="danger-link">Lokale Daten löschen</button><p class="muted small">Version 3.0 · Deine Daten bleiben lokal auf dem Gerät.</p></section>
 </section>
 </main>
 
-<footer>
-  <button id="clearBtn" class="danger-link">Lokale Daten löschen</button>
-  <span>v2.0 iPhone</span>
-</footer>
-</div>
+<nav class="tabbar" aria-label="Hauptmenü">
+  <button class="tab active" data-view="overview"><span>⌂</span><small>Übersicht</small></button>
+  <button class="tab" data-view="months"><span>▦</span><small>Monate</small></button>
+  <button class="tab" data-view="import"><span>⇧</span><small>Import</small></button>
+  <button class="tab" data-view="settings"><span>⚙</span><small>Einstellungen</small></button>
+</nav>
 
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <script src="app.js"></script>
