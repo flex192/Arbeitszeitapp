@@ -38,7 +38,9 @@
 
 <section id="view-import" class="view">
   <section class="card"><div class="section-head"><h2>Excel importieren</h2><span class="pill">Lokal</span></div><p class="muted">Neue Monate werden hinzugefügt. Bereits vorhandene Tage aus derselben Datei werden vollständig ersetzt, damit korrigierte Excel-Daten sauber übernommen werden.</p><label class="upload"><input id="fileInput" type="file" accept=".xlsx,.xls,.csv"><span>📥 Excel-Datei auswählen</span></label><div id="importMessage" class="message"></div><div id="reviewHint" class="message"></div></section>
-  <section class="card"><h2>Import-Regeln</h2><ul class="notes"><li>Fehlt in einer Folgezeile das Datum, gehört sie zum zuletzt genannten Datum.</li><li>Mehrere Zeiträume desselben Tages werden zusammengeführt.</li><li>Wochentage werden immer aus dem echten Datum berechnet.</li><li>Dienste über Mitternacht werden korrekt behandelt.</li></ul></section>
+  <section class="card"><div class="section-head"><h2>Importierte Dateien</h2><span class="muted">Einzeln löschbar</span></div><p class="muted">Hier kannst du einzelne importierte Excel-Dateien samt ihren gespeicherten Tagen wieder vom Gerät entfernen.</p><div id="importedFiles"></div></section>
+  <section class="card"><div class="section-head"><h2>Importierte Dateien</h2><span class="muted">Einzeln löschbar</span></div><p class="muted">Hier kannst du einzelne importierte Excel-Dateien samt ihren gespeicherten Tagen wieder vom Gerät entfernen.</p><div id="importedFiles"></div></section>
+  <section class="card"><h2>Import-Regeln</h2><ul class="notes"><li>Fehlt in einer Folgezeile das Datum, gehört sie zum zuletzt genannten Datum.</li><li>Mehrere Zeiträume desselben Tages werden zusammengeführt.</li><li>Wochentage werden immer aus dem echten Datum berechnet.</li><li>Dienste über Mitternacht werden korrekt behandelt.</li><li>Ein vollständig leerer Tag ohne Zeit und Buchungsgrund zählt ausdrücklich als ±0:00.</li></ul></section>
 </section>
 
 <section id="view-settings" class="view">
@@ -53,7 +55,7 @@
     <p class="muted small">Die Einstellungen werden nur auf diesem Gerät gespeichert.</p>
   </section>
   <section class="card"><h2>Berechnungsregeln</h2><ul class="notes"><li>Mo–Do: 9:00 h Sollzeit.</li><li>Freitag: 5:00 h Sollzeit.</li><li>Samstag/Sonntag: 0:00 h Sollzeit.</li><li>Sondergrund ohne Zeiten: ±0:00.</li><li>Sondergrund mit Zeiten: 9:00 h Soll an Montag–Freitag; am Wochenende 0:00 h Soll.</li><li>Urlaub an einem regulären Arbeitstag wird mit dem Tages-Soll gutgeschrieben.</li><li>Feiertage und sonstige reine Abwesenheiten ohne Zeiten: 0:00 h Soll und 0:00 h Saldo.</li></ul></section>
-  <section class="card"><button id="clearBtn" class="danger-link">Lokale Daten löschen</button><p class="muted small">Version 3.0 · Deine Daten bleiben lokal auf dem Gerät.</p></section>
+  <section class="card"><button id="clearBtn" class="danger-link">Lokale Daten löschen</button><p class="muted small">Version 3.1 · Deine Daten bleiben lokal auf dem Gerät.</p></section>
 </section>
 </main>
 

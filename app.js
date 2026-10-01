@@ -2,6 +2,7 @@ const $ = id => document.getElementById(id);
 const DEFAULTS = {weeklyHours:41, annualVacation:30, carryVacation:0, regularBreak:30, eveningBreak:15, eveningFrom:"16:30"};
 let settings = {...DEFAULTS, ...(JSON.parse(localStorage.getItem("az-settings") || "null") || {})};
 let records = JSON.parse(localStorage.getItem("az-records-v2") || "null");
+let importedFiles = JSON.parse(localStorage.getItem("az-imported-files-v1") || "[]");
 let legacyRecords = null;
 if (!records) {
   legacyRecords = JSON.parse(localStorage.getItem("az-records") || "[]");
@@ -17,6 +18,7 @@ const VACATION_WORD = "erholungsurlaub";
 function save(){
   localStorage.setItem("az-records-v2", JSON.stringify(records));
   localStorage.setItem("az-settings", JSON.stringify(settings));
+  localStorage.setItem("az-imported-files-v1", JSON.stringify(importedFiles));
 }
 function timeToMin(v){
   if(v==null || v==="") return null;
@@ -86,10 +88,15 @@ function regularBreakFor(block){
   return 0;
 }
 function calculateDay(day){
-  const d=dateObj(day.date), target=dailyTarget(d);
+  const d=dateObj(day.date);
   const blocks=(day.blocks||[]).filter(b=>b.start!=null&&b.end!=null);
   const reasons=[...(day.blocks||[]).map(b=>b.reason), day.dayReason||""].filter(Boolean);
   const types=reasons.map(reasonType);
+  // Vollständig leerer Tag: ausdrücklich ±0:00, kein automatisches Tages-Soll.
+  if(blocks.length===0 && reasons.length===0){
+    return {...day,date:day.date,weekday:dayName(d),target:0,raw:0,worked:0,balance:0,regularBreak:0,eveningBreak:0,status:"leer",reasons:[]};
+  }
+  const target=dailyTarget(d);
   const hasVacation=types.includes("vacation");
   const hasNoTarget=types.includes("no-target");
   let raw=0, regularBreak=0, eveningBreak=0;
@@ -163,6 +170,21 @@ function render(){
   $("monthTabs").innerHTML=months.length?months.map(m=>`<button class="month-tab ${m===selected?"active":""}" data-month="${m}">${monthLabel(m)}</button>`).join(""):`<div class="months-empty">Noch keine Monatsdaten.</div>`;
   document.querySelectorAll(".month-tab").forEach(b=>b.onclick=()=>{window.selectedMonth=b.dataset.month;renderMonth();});
   renderMonth();
+  renderImportedFiles();
+}
+function escapeHtml(v){return String(v??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","":"&quot;"}[c]));}
+function renderImportedFiles(){
+  const el=$("importedFiles"); if(!el)return;
+  if(!importedFiles.length){el.innerHTML=`<div class="months-empty">Noch keine importierten Dateien gespeichert.</div>`;return;}
+  el.innerHTML=importedFiles.slice().reverse().map(f=>`<div class="file-row"><div><strong>${escapeHtml(f.name)}</strong><small>${f.days} Tage · ${f.blocks} Zeitblöcke${f.importedAt?` · ${new Date(f.importedAt).toLocaleDateString("de-DE")}`:""}</small></div><button class="delete-file" data-source="${escapeHtml(f.source)}">Löschen</button></div>`).join("");
+  el.querySelectorAll(".delete-file").forEach(b=>b.onclick=()=>deleteImportedFile(b.dataset.source));
+}
+function deleteImportedFile(source){
+  const f=importedFiles.find(x=>x.source===source); if(!f)return;
+  if(!confirm(`Importierte Datei „${f.name}“ und die darin gespeicherten Tage entfernen?`))return;
+  records=records.filter(r=>r.source!==source); importedFiles=importedFiles.filter(x=>x.source!==source); save();
+  if(window.selectedMonth && !uniqueMonths().includes(window.selectedMonth))window.selectedMonth=null;
+  render(); $("importMessage").textContent=`${f.name} wurde entfernt.`;
 }
 function renderMonth(){
   const data=calculateAll(), m=window.selectedMonth;
@@ -216,13 +238,15 @@ async function importFile(file){
     if(!ws)throw new Error("Kein Tabellenblatt „AZ“ gefunden.");
     const incoming=parseSheet(ws,file.name);
     if(!incoming.length)throw new Error("Keine Tagesdaten erkannt.");
+    const source=`${file.name}::${incoming[0].date}::${incoming[incoming.length-1].date}`;
+    incoming.forEach(r=>r.source=source);
     const incomingKeys=new Set(incoming.map(r=>r.date));
-    // Replace imported dates from this file, rather than merging blocks with an old
-    // interpretation. This is essential when a v1 day had already been imported incorrectly.
     const keep=records.filter(r=>!incomingKeys.has(r.date));
     records=[...keep,...incoming].sort((a,b)=>a.date.localeCompare(b.date));
-    save(); render();
+    importedFiles=importedFiles.filter(f=>f.source!==source);
     const blockCount=incoming.reduce((n,r)=>n+r.blocks.length,0);
+    importedFiles.push({source,name:file.name,days:incoming.length,blocks:blockCount,importedAt:new Date().toISOString()});
+    save(); render();
     $("importMessage").textContent=`${file.name}: ${incoming.length} Tage und ${blockCount} Zeitblöcke erkannt. Tage aus dieser Datei wurden sauber neu eingelesen; doppelte alte Interpretationen werden ersetzt.`;
   }catch(e){$("importMessage").textContent="Importfehler: "+e.message}
 }
@@ -240,7 +264,7 @@ $("exportBtn").onclick=exportCSV;
 document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>showView(t.dataset.view));
 function loadSettingsUI(){$("weeklyHours").value=settings.weeklyHours;$("annualVacation").value=settings.annualVacation;$("carryVacation").value=settings.carryVacation;$("regularBreak").value=settings.regularBreak;$("eveningBreak").value=settings.eveningBreak;$("eveningFrom").value=settings.eveningFrom;}
 $("saveSettings").onclick=()=>{settings={weeklyHours:+$("weeklyHours").value,annualVacation:+$("annualVacation").value,carryVacation:+$("carryVacation").value,regularBreak:+$("regularBreak").value,eveningBreak:+$("eveningBreak").value,eveningFrom:$("eveningFrom").value||"16:30"};save();render()};
-$("clearBtn").onclick=()=>{if(confirm("Alle lokal gespeicherten Arbeitszeitdaten und Einstellungen löschen?")){records=[];localStorage.removeItem("az-records-v2");localStorage.removeItem("az-records");render()}};
+$("clearBtn").onclick=()=>{if(confirm("Alle lokal gespeicherten Arbeitszeitdaten und Einstellungen löschen?")){records=[];importedFiles=[];localStorage.removeItem("az-records-v2");localStorage.removeItem("az-records");localStorage.removeItem("az-imported-files-v1");render()}};
 if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
 loadSettingsUI();
 render();
