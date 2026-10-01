@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#111827">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Arbeitszeit">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="styles.css">
+<title>Arbeitszeitkonto</title>
+</head>
+<body>
+<div id="app">
+<header class="topbar">
+  <div><div class="eyebrow">PRIVAT • LOKAL</div><h1>Arbeitszeitkonto</h1></div>
+  <button id="settingsBtn" class="icon-btn" aria-label="Einstellungen">⚙️</button>
+</header>
+
+<main>
+<section class="hero card">
+  <div>
+    <div class="muted light">Aktuelles Arbeitszeitkonto</div>
+    <div id="totalBalance" class="hero-number">00:00 h</div>
+    <div id="periodLabel" class="muted light">Noch keine Daten</div>
+  </div>
+  <div class="hero-badge">⏱️</div>
+</section>
+
+<section class="grid">
+  <div class="stat card"><span>Geleistet</span><strong id="worked">00:00 h</strong></div>
+  <div class="stat card"><span>Sollzeit</span><strong id="target">00:00 h</strong></div>
+  <div class="stat card"><span>Urlaub genutzt</span><strong id="vacationUsed">0 Tage</strong></div>
+  <div class="stat card"><span>Resturlaub</span><strong id="vacationLeft">30 Tage</strong></div>
+</section>
+
+<section class="card">
+  <div class="section-head"><h2>Excel importieren</h2><span id="fileStatus" class="pill">Bereit</span></div>
+  <p class="muted">Neue Monate werden zum bestehenden Arbeitszeitkonto hinzugefügt. Bereits importierte Tage werden nicht doppelt angelegt.</p>
+  <label class="upload">
+    <input id="fileInput" type="file" accept=".xlsx,.xls,.csv">
+    <span>📥 Excel-Datei auswählen</span>
+  </label>
+  <div id="importMessage" class="message"></div>
+</section>
+
+<section class="card">
+  <div class="section-head"><h2>Arbeitszeitkonto</h2><button id="exportBtn" class="small-btn">Export</button></div>
+  <div id="accountSummary" class="summary-list"></div>
+</section>
+
+<section class="card">
+  <div class="section-head"><h2>Monate</h2><span id="monthCount" class="muted">0</span></div>
+  <div id="months" class="months"></div>
+</section>
+
+<section class="card">
+  <div class="section-head"><h2>Tage</h2><span id="rowCount" class="muted">0 Tage</span></div>
+  <div id="days" class="days"></div>
+</section>
+
+<section id="settings" class="card settings hidden">
+  <div class="section-head"><h2>Einstellungen</h2><button id="closeSettings" class="small-btn">Schließen</button></div>
+  <label>Wochenarbeitszeit
+    <input id="weeklyHours" type="number" min="1" max="80" step="0.5">
+  </label>
+  <label>Jahresurlaub
+    <input id="annualVacation" type="number" min="0" max="100" step="0.5">
+  </label>
+  <label>Urlaub Vorjahr
+    <input id="carryVacation" type="number" min="0" max="100" step="0.5">
+  </label>
+  <label>Normale Pause Mo–Do (Minuten)
+    <input id="regularBreak" type="number" min="0" max="180" step="5">
+  </label>
+  <label>Abendpause bei Dienst über 16:30 (Minuten)
+    <input id="eveningBreak" type="number" min="0" max="120" step="5">
+  </label>
+  <label>Abendpause ab Uhrzeit
+    <input id="eveningFrom" type="time">
+  </label>
+  <button id="saveSettings" class="primary">Speichern</button>
+  <p class="muted small">Die Einstellungen werden nur auf diesem Gerät gespeichert.</p>
+</section>
+
+<section class="card">
+  <div class="section-head"><h2>Hinweise</h2></div>
+  <ul class="notes">
+    <li>Samstag und Sonntag haben keine Sollzeit.</li>
+    <li>Mo–Do: 07:00–16:30 minus 30 Minuten = 9:00 h Sollzeit.</li>
+    <li>Fr: 07:00–12:00 = 5:00 h Sollzeit.</li>
+    <li>Ein Dienst über 16:30 erhält zusätzlich die eingestellte Abendpause.</li>
+    <li>Urlaub an einem regulären Arbeitstag wird mit der jeweiligen Sollzeit gutgeschrieben.</li>
+  </ul>
+</section>
+</main>
+
+<footer>
+  <button id="clearBtn" class="danger-link">Lokale Daten löschen</button>
+  <span>v1.0 iPhone</span>
+</footer>
+</div>
+
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
