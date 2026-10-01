@@ -43,7 +43,7 @@
     <input id="fileInput" type="file" accept=".xlsx,.xls,.csv">
     <span>📥 Excel-Datei auswählen</span>
   </label>
-  <div id="importMessage" class="message"></div>
+  <div id="importMessage" class="message"></div><div id="reviewHint" class="message"></div>
 </section>
 
 <section class="card">
@@ -91,15 +91,18 @@
     <li>Samstag und Sonntag haben keine Sollzeit.</li>
     <li>Mo–Do: 07:00–16:30 minus 30 Minuten = 9:00 h Sollzeit.</li>
     <li>Fr: 07:00–12:00 = 5:00 h Sollzeit.</li>
-    <li>Ein Dienst über 16:30 erhält zusätzlich die eingestellte Abendpause.</li>
+    <li>Mehrere Zeiträume am selben Datum werden zusammengeführt; ein fehlendes Datum in einer Folgezeile gehört zum zuletzt genannten Datum.</li>
+    <li>Die Abendpause wird pro Zeitblock berücksichtigt, wenn dessen Ende nach 16:30 liegt.</li>
+    <li>Die normale 30-Minuten-Pause wird nur bei einem zusammenhängenden Mo–Do-Zeitblock ab 07:00 bis mindestens 16:00 abgezogen.</li>
     <li>Urlaub an einem regulären Arbeitstag wird mit der jeweiligen Sollzeit gutgeschrieben.</li>
+    <li>„Ausgleich Mehrarbeit Grundbetrieb“ verbraucht das Tages-Soll aus dem Überstundenkonto; Feiertage haben kein Soll.</li>
   </ul>
 </section>
 </main>
 
 <footer>
   <button id="clearBtn" class="danger-link">Lokale Daten löschen</button>
-  <span>v1.0 iPhone</span>
+  <span>v2.0 iPhone</span>
 </footer>
 </div>
 

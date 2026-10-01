@@ -1,32 +1,22 @@
-# Arbeitszeitkonto – iPhone/PWA Version 1.0
+# Arbeitszeit-App iPhone v2
 
-## Enthalten
-- Mobile-first iPhone-Oberfläche
-- PWA/„Zum Home-Bildschirm“-Unterstützung
-- Excel XLSX/XLS/CSV-Import
-- Import des Tabellenblatts „AZ“
-- Dauerhaftes persönliches Arbeitszeitkonto: neue Monate werden ergänzt, nicht überschrieben
-- Doppelte Tage werden beim erneuten Import aktualisiert statt dupliziert
-- Gesamt-, Monats- und Tagesauswertung
-- Überstunden-/Saldo-Konto über alle importierten Monate
-- Resturlaub über alle importierten Monate
-- Einstellungen für 41-Stunden-Woche, Urlaub und Pausen
-- Dienst über Mitternacht
-- Export des Arbeitszeitkontos als CSV
-- lokale Speicherung im Browser
+Mobile-first PWA zur lokalen Auswertung der eigenen Arbeitszeit-Excel-Dateien.
 
-## Deine Sollzeit
-- Mo–Do: 07:00–16:30 minus 30 Minuten = 09:00 Sollzeit
-- Freitag: 07:00–12:00 = 05:00 Sollzeit
-- Samstag/Sonntag: 00:00 Sollzeit
-- Gesamt: 41:00 h/Woche
-- Dienst über 16:30: zusätzliche 15 Minuten Abendpause
+## Neu in v2
+- Mehrere Zeiträume am selben Kalendertag werden zusammengeführt.
+- Excel-Zeilen ohne Datum übernehmen das zuletzt genannte Datum.
+- Wochentage werden ausschließlich aus dem echten Datum berechnet.
+- Dienste über Mitternacht werden korrekt als Zeitspanne behandelt.
+- 00:00–00:00 wird als 24-Stunden-Dienst interpretiert.
+- Normale 30-Minuten-Pause wird nur bei einem zusammenhängenden Mo–Do-Block ab 07:00 bis mindestens 16:00 abgezogen.
+- Abendpause wird je Zeitblock bei Ende nach 16:30 berücksichtigt.
+- Urlaub schreibt die jeweilige Tages-Sollzeit gut.
+- „Ausgleich Mehrarbeit Grundbetrieb“ ist dienstfrei und reduziert das Überstundenkonto um die normale Tages-Sollzeit.
+- Feiertage und andere explizit dienstfreie Abwesenheiten erzeugen kein Tages-Soll.
+- Beim erneuten Import eines Monats werden die betroffenen Tage ersetzt, damit alte Fehlinterpretationen nicht erhalten bleiben.
+- Export enthält Zeiträume, Wochentag, Rohzeit, Arbeitszeit, Sollzeit und Saldo.
 
-## iPhone installieren
-1. Diese Dateien auf einen HTTPS-Webserver legen.
-2. Die URL in Safari auf dem iPhone öffnen.
-3. Teilen -> „Zum Home-Bildschirm“.
-4. Die App starten. Die Daten werden lokal auf dem Gerät gespeichert.
+## Installation
+Wie bisher über GitHub Pages veröffentlichen und auf dem iPhone in Safari öffnen → Teilen → Zum Home-Bildschirm.
 
-## Wichtig
-Die Anwendung ist eine private Arbeitszeit-Auswertung und keine rechtliche Abrechnung. Die konkrete Behandlung außergewöhnlicher Mehrtagesdienste/Pausen sollte vor produktiver Verwendung mit deiner dienstlichen Regelung abgeglichen werden.
+Die importierten Arbeitszeitdaten werden lokal im Browser gespeichert. Keine Excel-Dateien ins GitHub-Repository hochladen.
